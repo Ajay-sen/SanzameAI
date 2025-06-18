@@ -5,15 +5,16 @@ import UserModel from "@/model/User";
 import { User } from "next-auth";
 import { NextRequest } from "next/server";
 
+// 👇 FIXED: Use type from next/server for params
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { messageid: string } }
+  context: { params: { messageid: string } }
 ) {
-  const messageId = params.messageid;
-  await dbConnect();
+  const { messageid } = context.params;
 
+  await dbConnect();
   const session = await getServerSession(authOptions);
-  const user: User = session?.user as User;
+  const user = session?.user as User;
 
   if (!session || !session.user) {
     return Response.json(
@@ -25,7 +26,7 @@ export async function DELETE(
   try {
     const updateResult = await UserModel.updateOne(
       { _id: user._id },
-      { $pull: { messages: { _id: messageId } } }
+      { $pull: { messages: { _id: messageid } } }
     );
 
     if (updateResult.modifiedCount === 0) {
